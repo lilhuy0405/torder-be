@@ -1,12 +1,18 @@
-# node-typescript-boilerplate
-A boilerplate for start any project using nodejs with typescript
+# torder be
+
+search shipcode and get order info
 
 # Run
+
 - npm install
 - npm run dev
+
 # Build js version
+
 - npm run build
+
 # Run built versrion
+
 - npm start
 
 start codding in src/main.ts
