@@ -105,7 +105,11 @@ app.post('/login', async (req, res) => {
   }
 })
 
-
+app.get('/health', async (req, res) => {
+  res.status(200).json({
+    message: 'Server torder is running'
+  })
+})
 app.get('/me', auth, async (req, res) => {
   try {
     const loggedInUser = req.user;
