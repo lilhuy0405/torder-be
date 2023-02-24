@@ -1,4 +1,5 @@
 import * as multer from 'multer';
+const util = require('util');
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads')
@@ -8,6 +9,6 @@ const storage = multer.diskStorage({
     }
 })
 
-const upload = multer({ storage: storage })
-
-export default upload;
+const upload = multer({ storage: storage }).single('file');
+const uploadFileMiddleware = util.promisify(upload);
+export default uploadFileMiddleware;

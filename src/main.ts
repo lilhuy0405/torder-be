@@ -13,6 +13,7 @@ import upload from './middleware/upload';
 import * as bodyParser from 'body-parser';
 import Order from './entity/Order';
 import Excel = require('exceljs');
+import uploadFileMiddleware from './middleware/upload';
 
 AppDataSource
   .initialize()
@@ -145,9 +146,9 @@ app.get('/me', auth, async (req, res) => {
   }
 })
 
-app.post("/upload-orders", [auth, upload.single("file")], async (req, res) => {
+app.post("/upload-orders", [auth], async (req, res) => {
   try {
-
+    await uploadFileMiddleware(req, res)
     const { shipCodeColumn, phoneColumn, productColumn, customerNameColumn, dataStartRow } = req.body;
     if (!shipCodeColumn || !phoneColumn || !productColumn || !customerNameColumn || !dataStartRow) {
       return res.status(400).json({
