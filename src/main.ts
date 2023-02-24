@@ -8,6 +8,12 @@ import { User } from './entity';
 import { UserService, OrderService } from './service';
 import * as bcrypt from 'bcrypt';
 import * as auth from './middleware/auth'
+import * as multer from 'multer';
+import upload from './middleware/upload';
+import * as bodyParser from 'body-parser';
+import Order from './entity/Order';
+import Excel = require('exceljs');
+
 AppDataSource
   .initialize()
   .then(() => {
@@ -20,10 +26,15 @@ AppDataSource
 const app: Express = express()
 app.use(cors());
 app.use(express.json())
+app.use(bodyParser.urlencoded({ extended: true }))
+
 // declar services
 const userService = new UserService()
 const orderService = new OrderService()
+// public resources
+app.use("/uploads", express.static('uploads'));
 
+// routers and controllers
 app.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body
@@ -110,6 +121,7 @@ app.get('/health', async (req, res) => {
     message: 'Server torder is running'
   })
 })
+
 app.get('/me', auth, async (req, res) => {
   try {
     const loggedInUser = req.user;
@@ -133,6 +145,147 @@ app.get('/me', auth, async (req, res) => {
   }
 })
 
+app.post("/upload-orders", [auth, upload.single("file")], async (req, res) => {
+  try {
+
+    const { shipCodeColumn, phoneColumn, productColumn, customerNameColumn, dataStartRow } = req.body;
+    if (!shipCodeColumn || !phoneColumn || !productColumn || !customerNameColumn || !dataStartRow) {
+      return res.status(400).json({
+        message: 'Please fill all fields'
+      })
+    }
+
+    console.log(req.file);
+    console.log({ shipCodeColumn, phoneColumn, productColumn, customerNameColumn, dataStartRow });
+
+    const fileExtension = req.file.originalname.split('.').pop();
+    if (fileExtension !== 'xlsx') {
+      return res.status(400).json({
+        message: 'File format is not supported'
+      })
+    }
+
+    const workbook = new Excel.Workbook();
+    await workbook.xlsx.readFile('uploads/' + req.file.filename);
+    const worksheet = workbook.getWorksheet(1);
+    const listOrder = [];
+    worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+      if (rowNumber >= dataStartRow) {
+        const shipCode = row.getCell(shipCodeColumn).value;
+        const phone = row.getCell(phoneColumn).value;
+        const product = row.getCell(productColumn).value;
+        const customerName = row.getCell(customerNameColumn).value;
+        if (shipCode && phone && product && customerName) {
+          listOrder.push({
+            shipCode,
+            phone,
+            product,
+            customerName
+          })
+        }
+      }
+    });
+    //save to db
+    const savedOrders = await Promise.all(listOrder.map(async (order) => {
+      try {
+        const newOrder = new Order()
+        newOrder.shipCode = order.shipCode
+        newOrder.phoneNumber = order.phone
+        newOrder.product = order.product
+        newOrder.customerName = order.customerName
+        return await orderService.createOrder(newOrder)
+      } catch (saveErr) {
+        console.log("save order error", saveErr);
+        return null;
+      }
+    }))
+
+    const succcess = savedOrders.filter(order => order !== null)
+
+    res.status(200).json({
+      message: 'Upload orders success',
+      data: succcess
+    })
+
+
+  } catch (err) {
+    res.status(500).json({
+      message: 'Upload orders failed ' + err.message
+    })
+  }
+});
+
+// api for orders
+app.get('/latest-orders', async (req, res) => {
+  try {
+    const limit = req.query.limit || 10;
+    const orders = await orderService.getTopLastestOrders(limit)
+    res.status(200).json({
+      message: 'Get orders success',
+      data: orders
+    })
+
+  } catch (err) {
+    res.status(500).json({
+      message: 'Get orders failed ' + err.message
+    })
+  }
+})
+
+//find orders
+app.get('/orders', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (q) {
+      const orders = await orderService.getOrderByPhoneNumberOrShipCode(q)
+      res.status(200).json({
+        message: 'Get orders success',
+        data: orders
+      })
+    }
+    const { page = 1, limit = 10 } = req.query;
+
+    const orders = await orderService.getOrderPagination(page, limit)
+    const totalOrders = await orderService.countOrders()
+    res.status(200).json({
+      message: 'Get orders success',
+      data: {
+        orders,
+        currentPage: page,
+        totalPages: Math.ceil(totalOrders / limit),
+      }
+    })
+
+  } catch (err) {
+    res.status(500).json({
+      message: 'Get orders failed ' + err.message
+    })
+  }
+})
+
+// find order by phone number
+app.get('/orders/:phoneNumber', async (req, res) => {
+  try {
+    const { phoneNumber } = req.params;
+    if (!phoneNumber) {
+      return res.status(400).json({
+        message: 'Please fill all fields'
+      })
+    }
+    const orders = await orderService.getOrderByPhoneNumber(phoneNumber)
+    res.status(200).json({
+      message: 'Get orders success',
+      data: orders
+    })
+
+  } catch (err) {
+    res.status(500).json({
+      message: 'Get orders failed ' + err.message
+    })
+  }
+})
+
+//start server
 const port = process.env.PORT || 8080
 app.listen(port, () => {
   console.log(`App listening on port ${port}`)
