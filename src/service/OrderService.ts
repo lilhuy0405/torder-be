@@ -62,7 +62,7 @@ class OrderService {
         })
     }
 
-    async getOrderByPhoneNumberOrShipCode(q): Promise<Order[]> {
+    async getOrderByPhoneNumberOrShipCode(q, page, limit): Promise<Order[]> {
         return await this.orderRepository.find({
             where: [
                 {
@@ -80,7 +80,28 @@ class OrderService {
             ],
             order: {
                 createdAt: 'DESC'
-            }
+            },
+            skip: (page - 1) * limit,
+            take: limit
+        })
+    }
+
+    async countOrderByPhoneNumberOrShipCode(q): Promise<number> {
+        return await this.orderRepository.count({
+            where: [
+                {
+                    phoneNumber: q
+                },
+                {
+                    shipCode: q
+                },
+                {
+                    customerName: q
+                },
+                {
+                    product: q
+                }
+            ]
         })
     }
 

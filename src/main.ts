@@ -237,14 +237,22 @@ app.get('/latest-orders', async (req, res) => {
 app.get('/orders', async (req, res) => {
   try {
     const { q } = req.query;
-    if (q) {
-      const orders = await orderService.getOrderByPhoneNumberOrShipCode(q)
-      res.status(200).json({
-        message: 'Get orders success',
-        data: orders
-      })
-    }
+  
+
     const { page = 1, limit = 10 } = req.query;
+    if (q && q.length > 0) {
+      const orders = await orderService.getOrderByPhoneNumberOrShipCode(q, page, limit)
+      const totalOrders = await orderService.countOrderByPhoneNumberOrShipCode(q)
+      return res.status(200).json({
+        message: 'Get orders success',
+        data: {
+          orders,
+          currentPage: page,
+          totalPages: Math.ceil(totalOrders / limit),
+        }
+      })
+
+    }
 
     const orders = await orderService.getOrderPagination(page, limit)
     const totalOrders = await orderService.countOrders()
