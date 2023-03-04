@@ -115,6 +115,14 @@ class OrderService {
         })
     }
 
+    async deleteOrder(shipcode: string, phoneNumber: string): Promise<void> {
+        await this.orderRepository.delete({
+            shipCode: shipcode,
+            phoneNumber
+        })
+    }
+
+
 }
 
 export default OrderService

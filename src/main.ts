@@ -319,7 +319,7 @@ app.get('/orders-count', async (req, res) => {
   }
 })
 
-app.delete('/orders', async (req, res) => {
+app.delete('/orders-by-source', async (req, res) => {
   const { sourceFile } = req.body;
   if (!sourceFile) {
     return res.status(400).json({
@@ -328,6 +328,27 @@ app.delete('/orders', async (req, res) => {
   }
   try {
     const orders = await orderService.deleteOrdersBySourceFile(sourceFile)
+    res.status(200).json({
+      message: 'Delete orders success',
+      data: orders
+    })
+  } catch (err) {
+    res.status(500).json({
+      message: 'Delete orders failed ' + err.message
+    })
+
+  }
+})
+
+app.delete('/orders/:phoneNumber/:shipCode', async (req, res) => {
+  const { phoneNumber, shipCode } = req.params;
+  if (!phoneNumber || !shipCode) {
+    return res.status(400).json({
+      message: 'Please fill all fields'
+    })
+  }
+  try {
+    const orders = await orderService.deleteOrder(shipCode, phoneNumber)
     res.status(200).json({
       message: 'Delete orders success',
       data: orders
