@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { Like, Repository } from "typeorm";
 import { Order } from "../entity";
 import { AppDataSource } from '../data-source';
 
@@ -66,16 +66,16 @@ class OrderService {
         return await this.orderRepository.find({
             where: [
                 {
-                    phoneNumber: q
+                    phoneNumber: Like(`%${q}%`)
                 },
                 {
-                    shipCode: q
+                    shipCode: Like(`%${q}%`)
                 },
                 {
-                    customerName: q
+                    customerName: Like(`%${q}%`)
                 },
                 {
-                    product: q
+                    product: Like(`%${q}%`)
                 }
             ],
             order: {
@@ -90,16 +90,16 @@ class OrderService {
         return await this.orderRepository.count({
             where: [
                 {
-                    phoneNumber: q
+                    phoneNumber: Like(`%${q}%`)
                 },
                 {
-                    shipCode: q
+                    shipCode: Like(`%${q}%`)
                 },
                 {
-                    customerName: q
+                    customerName: Like(`%${q}%`)
                 },
                 {
-                    product: q
+                    product: Like(`%${q}%`)
                 }
             ]
         })
@@ -107,6 +107,12 @@ class OrderService {
 
     async countOrders(): Promise<number> {
         return await this.orderRepository.count()
+    }
+
+    async deleteOrdersBySourceFile(sourceFile: string): Promise<void> {
+        await this.orderRepository.delete({
+            sourceFile
+        })
     }
 
 }

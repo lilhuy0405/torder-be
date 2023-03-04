@@ -31,6 +31,12 @@ class Order {
         default: () => 'CURRENT_TIMESTAMP',
     })
     updatedAt: Date
+
+    @Column({
+        name: 'source_file',
+        nullable: true,
+    })
+    sourceFile: string
 }
 
 export default Order

@@ -193,7 +193,8 @@ app.post("/upload-orders", [auth], async (req, res) => {
         newOrder.shipCode = order.shipCode
         newOrder.phoneNumber = order.phone
         newOrder.product = order.product
-        newOrder.customerName = order.customerName
+        newOrder.customerName = order.customerName;
+        newOrder.sourceFile = req.file.filename
         return await orderService.createOrder(newOrder)
       } catch (saveErr) {
         console.log("save order error", saveErr);
@@ -237,7 +238,7 @@ app.get('/latest-orders', async (req, res) => {
 app.get('/orders', async (req, res) => {
   try {
     const { q } = req.query;
-  
+
 
     const { page = 1, limit = 10 } = req.query;
     if (q && q.length > 0) {
@@ -291,6 +292,51 @@ app.get('/orders/:phoneNumber', async (req, res) => {
     res.status(500).json({
       message: 'Get orders failed ' + err.message
     })
+  }
+})
+
+app.get('/orders-count', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (q && q.length > 0) {
+      const totalOrders = await orderService.countOrderByPhoneNumberOrShipCode(q)
+      return res.status(200).json({
+        message: 'Count orders success',
+        data: totalOrders
+      })
+
+    }
+    const totalOrders = await orderService.countOrders()
+    res.status(200).json({
+      message: 'Count orders success',
+      data: totalOrders
+    })
+
+  } catch (err) {
+    res.status(500).json({
+      message: 'Get orders failed ' + err.message
+    })
+  }
+})
+
+app.delete('/orders', async (req, res) => {
+  const { sourceFile } = req.body;
+  if (!sourceFile) {
+    return res.status(400).json({
+      message: 'Please fill all fields'
+    })
+  }
+  try {
+    const orders = await orderService.deleteOrdersBySourceFile(sourceFile)
+    res.status(200).json({
+      message: 'Delete orders success',
+      data: orders
+    })
+  } catch (err) {
+    res.status(500).json({
+      message: 'Delete orders failed ' + err.message
+    })
+
   }
 })
 
