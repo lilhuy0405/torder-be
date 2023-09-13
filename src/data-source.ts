@@ -2,6 +2,7 @@ import "reflect-metadata"
 import { DataSource } from "typeorm"
 import 'dotenv/config';
 import { Order, User } from "./entity";
+import ShippingUnit from "./entity/ShippingUnit";
 
 
 export const AppDataSource = new DataSource({
@@ -14,6 +15,6 @@ export const AppDataSource = new DataSource({
     synchronize: true,
     logging: false,
     schema: "public",
-    entities: [Order, User],
+    entities: [Order, User, ShippingUnit],
     subscribers: [],
 })

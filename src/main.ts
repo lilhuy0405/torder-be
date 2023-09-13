@@ -1,11 +1,12 @@
 import * as cors from 'cors';
-import { Express, Request } from "express";
-import { AppDataSource } from './data-source';
+import {Express, Request} from "express";
+import {AppDataSource} from './data-source';
+
 const express = require('express')
 import 'dotenv/config';
 import 'reflect-metadata';
-import { User } from './entity';
-import { UserService, OrderService } from './service';
+import {ShippingUnit, User} from './entity';
+import {UserService, OrderService, ShippingUnitService} from './service';
 import * as bcrypt from 'bcrypt';
 import * as auth from './middleware/auth'
 import * as multer from 'multer';
@@ -27,18 +28,19 @@ AppDataSource
 const app: Express = express()
 app.use(cors());
 app.use(express.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.urlencoded({extended: true}))
 
 // declar services
 const userService = new UserService()
 const orderService = new OrderService()
+const shippingUnitService = new ShippingUnitService()
 // public resources
 app.use("/uploads", express.static('uploads'));
 
 // routers and controllers
 app.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body
+    const {name, email, password} = req.body
     const user = new User()
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -76,7 +78,7 @@ app.post('/register', async (req, res) => {
 
 app.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const {email, password} = req.body;
     if (!email || !password) {
       return res.status(400).json({
         message: 'Please fill all fields'
@@ -146,10 +148,10 @@ app.get('/me', auth, async (req, res) => {
   }
 })
 
-app.post("/upload-orders", [auth], async (req, res) => {
+app.post("/upload-orders", [auth], async (req: any, res: any) => {
   try {
     await uploadFileMiddleware(req, res)
-    const { shipCodeColumn, phoneColumn, productColumn, customerNameColumn, dataStartRow } = req.body;
+    const {shipCodeColumn, phoneColumn, productColumn, customerNameColumn, dataStartRow, shippingUnitId} = req.body;
     if (!shipCodeColumn || !phoneColumn || !productColumn || !customerNameColumn || !dataStartRow) {
       return res.status(400).json({
         message: 'Please fill all fields'
@@ -157,7 +159,7 @@ app.post("/upload-orders", [auth], async (req, res) => {
     }
 
     console.log(req.file);
-    console.log({ shipCodeColumn, phoneColumn, productColumn, customerNameColumn, dataStartRow });
+    console.log({shipCodeColumn, phoneColumn, productColumn, customerNameColumn, dataStartRow});
 
     const fileExtension = req.file.originalname.split('.').pop();
     if (fileExtension !== 'xlsx') {
@@ -170,7 +172,7 @@ app.post("/upload-orders", [auth], async (req, res) => {
     await workbook.xlsx.readFile('uploads/' + req.file.filename);
     const worksheet = workbook.getWorksheet(1);
     const listOrder = [];
-    worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+    worksheet.eachRow({includeEmpty: true}, function (row, rowNumber) {
       if (rowNumber >= dataStartRow) {
         const shipCode = row.getCell(shipCodeColumn).value;
         const phone = row.getCell(phoneColumn).value;
@@ -195,6 +197,12 @@ app.post("/upload-orders", [auth], async (req, res) => {
         newOrder.product = order.product
         newOrder.customerName = order.customerName;
         newOrder.sourceFile = req.file.filename
+        if (shippingUnitId) {
+          const shippingUnit = await shippingUnitService.findById(shippingUnitId);
+          if (shippingUnit) {
+            newOrder.shippingUnit = shippingUnit;
+          }
+        }
         return await orderService.createOrder(newOrder)
       } catch (saveErr) {
         console.log("save order error", saveErr);
@@ -237,10 +245,10 @@ app.get('/latest-orders', async (req, res) => {
 //find orders
 app.get('/orders', async (req, res) => {
   try {
-    const { q } = req.query;
+    const {q} = req.query;
 
 
-    const { page = 1, limit = 10 } = req.query;
+    const {page = 1, limit = 10} = req.query;
     if (q && q.length > 0) {
       const orders = await orderService.getOrderByPhoneNumberOrShipCode(q, page, limit)
       const totalOrders = await orderService.countOrderByPhoneNumberOrShipCode(q)
@@ -276,7 +284,7 @@ app.get('/orders', async (req, res) => {
 // find order by phone number
 app.get('/orders/:phoneNumber', async (req, res) => {
   try {
-    const { phoneNumber } = req.params;
+    const {phoneNumber} = req.params;
     if (!phoneNumber) {
       return res.status(400).json({
         message: 'Please fill all fields'
@@ -297,7 +305,7 @@ app.get('/orders/:phoneNumber', async (req, res) => {
 
 app.get('/orders-count', async (req, res) => {
   try {
-    const { q } = req.query;
+    const {q} = req.query;
     if (q && q.length > 0) {
       const totalOrders = await orderService.countOrderByPhoneNumberOrShipCode(q)
       return res.status(200).json({
@@ -320,7 +328,7 @@ app.get('/orders-count', async (req, res) => {
 })
 
 app.delete('/orders-by-source', async (req, res) => {
-  const { sourceFile } = req.body;
+  const {sourceFile} = req.body;
   if (!sourceFile) {
     return res.status(400).json({
       message: 'Please fill all fields'
@@ -341,7 +349,7 @@ app.delete('/orders-by-source', async (req, res) => {
 })
 
 app.delete('/orders/:phoneNumber/:shipCode', async (req, res) => {
-  const { phoneNumber, shipCode } = req.params;
+  const {phoneNumber, shipCode} = req.params;
   if (!phoneNumber || !shipCode) {
     return res.status(400).json({
       message: 'Please fill all fields'
@@ -361,6 +369,74 @@ app.delete('/orders/:phoneNumber/:shipCode', async (req, res) => {
   }
 })
 
+app.get('/shipping-units', auth, async (req, res) => {
+  try {
+    const shippingUnits =await shippingUnitService.getAll();
+    return res.status(200).json({
+      message: 'Get shipping units success',
+      data: shippingUnits
+    })
+
+  } catch (err: any) {
+    console.log("get shipping units error", err);
+    return res.status(500).json({
+      message: err.message
+    })
+  }
+})
+
+app.post('/shipping-units', auth, async (req, res) => {
+  try {
+    const {name, trackingWebsite} = req.body;
+    if (!name || !trackingWebsite) {
+      return res.status(400).json({
+        message: 'Please fill all fields'
+      })
+    }
+    const shippingUnit = new ShippingUnit();
+    shippingUnit.name = name;
+    shippingUnit.trackingWebsite = trackingWebsite;
+    const created = await shippingUnitService.createShippingUnit(shippingUnit);
+    return res.status(201).json({
+      message: 'created',
+      data: created
+    })
+  } catch (err: any) {
+    console.log("create shipping unit error", err);
+    return res.status(500).json({
+      message: err.message
+    })
+  }
+})
+app.put('/shipping-units/:id', auth, async (req, res) => {
+  try {
+    const {id} = req.params;
+    const shippingUnit = await shippingUnitService.findById(+id);
+    if (!shippingUnit) {
+      return res.status(400).json({
+        message: 'Shipping unit not found'
+      })
+    }
+    const {name, trackingWebsite} = req.body;
+    if (name) {
+      shippingUnit.name = name;
+    }
+    if (trackingWebsite) {
+      shippingUnit.trackingWebsite = trackingWebsite;
+    }
+    const updated = await shippingUnitService.updateShippingUnit(shippingUnit);
+    return res.status(200).json({
+      message: 'updated',
+      data: updated
+    })
+  } catch (err: any) {
+    console.log("update shipping unit error", err);
+    return res.status(500).json({
+      message: err.message
+    })
+
+  }
+})
 //start server
 const port = process.env.PORT || 8080
 app.listen(port, () => {
