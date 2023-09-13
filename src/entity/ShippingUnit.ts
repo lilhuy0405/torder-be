@@ -16,6 +16,9 @@ class ShippingUnit {
   @Column()
   trackingWebsite: string
 
+  @Column()
+  appName: string
+
   @OneToMany(type => Order, order => order.shippingUnit)
   orders: Order[];
 

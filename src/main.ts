@@ -371,7 +371,7 @@ app.delete('/orders/:phoneNumber/:shipCode', async (req, res) => {
 
 app.get('/shipping-units', auth, async (req, res) => {
   try {
-    const shippingUnits =await shippingUnitService.getAll();
+    const shippingUnits = await shippingUnitService.getAll();
     return res.status(200).json({
       message: 'Get shipping units success',
       data: shippingUnits
@@ -387,7 +387,7 @@ app.get('/shipping-units', auth, async (req, res) => {
 
 app.post('/shipping-units', auth, async (req, res) => {
   try {
-    const {name, trackingWebsite} = req.body;
+    const {name, trackingWebsite, appName} = req.body;
     if (!name || !trackingWebsite) {
       return res.status(400).json({
         message: 'Please fill all fields'
@@ -396,6 +396,9 @@ app.post('/shipping-units', auth, async (req, res) => {
     const shippingUnit = new ShippingUnit();
     shippingUnit.name = name;
     shippingUnit.trackingWebsite = trackingWebsite;
+    if (appName) {
+      shippingUnit.appName = appName;
+    }
     const created = await shippingUnitService.createShippingUnit(shippingUnit);
     return res.status(201).json({
       message: 'created',
@@ -417,12 +420,15 @@ app.put('/shipping-units/:id', auth, async (req, res) => {
         message: 'Shipping unit not found'
       })
     }
-    const {name, trackingWebsite} = req.body;
+    const {name, trackingWebsite, appName} = req.body;
     if (name) {
       shippingUnit.name = name;
     }
     if (trackingWebsite) {
       shippingUnit.trackingWebsite = trackingWebsite;
+    }
+    if (appName) {
+      shippingUnit.appName = appName;
     }
     const updated = await shippingUnitService.updateShippingUnit(shippingUnit);
     return res.status(200).json({
