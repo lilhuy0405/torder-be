@@ -39,6 +39,11 @@ class Order {
   })
   sourceFile: string
 
+  @Column({
+    nullable: true,
+  })
+
+  shippingUnitId: number
   @ManyToOne(type => ShippingUnit, x => x.orders, {
     nullable: true,
   })

@@ -1,6 +1,6 @@
 import {Repository} from "typeorm";
 import {AppDataSource} from "../data-source";
-import {ShippingUnit} from "../entity";
+import {Order, ShippingUnit} from "../entity";
 
 class ShippingUnitService {
   private shippingUnitRepository: Repository<ShippingUnit>

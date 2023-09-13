@@ -443,6 +443,20 @@ app.put('/shipping-units/:id', auth, async (req, res) => {
 
   }
 })
+
+app.get("/update-data", async (req, res) => {
+  try {
+    await orderService.updateData();
+    return res.status(200).json({
+      message: 'updated'
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      message: err.message
+    })
+  }
+});
 //start server
 const port = process.env.PORT || 8080
 app.listen(port, () => {

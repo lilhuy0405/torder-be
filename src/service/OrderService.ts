@@ -130,6 +130,16 @@ class OrderService {
   }
 
 
+  async updateData() {
+    await this.orderRepository.createQueryBuilder('order').update(Order).set({
+      shippingUnitId: 2
+    }).where("createdAt >= '2023-09-13'").execute()
+
+    await this.orderRepository.createQueryBuilder('order').update(Order).set({
+      shippingUnitId: 1
+    }).where("createdAt < '2023-09-13'").execute()
+  }
+
 }
 
 export default OrderService
