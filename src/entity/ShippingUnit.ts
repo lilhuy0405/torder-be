@@ -13,10 +13,14 @@ class ShippingUnit {
   })
   name: string
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   trackingWebsite: string
 
-  @Column()
+  @Column({
+    nullable: true,
+  })
   appName: string
 
   @OneToMany(type => Order, order => order.shippingUnit)
