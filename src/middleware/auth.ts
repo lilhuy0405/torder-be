@@ -1,6 +1,6 @@
 import jwt = require('jsonwebtoken');
 
-module.exports = (req, res, next) => {
+const authMiddleWare = (req, res, next) => {
     try {
         if (!req.headers.authorization) {
             return res.status(401).json({
@@ -17,3 +17,5 @@ module.exports = (req, res, next) => {
         })
     }
 }
+
+export default authMiddleWare;

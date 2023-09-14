@@ -1,6 +1,7 @@
 import {Like, Repository} from "typeorm";
 import {Order} from "../entity";
 import {AppDataSource} from '../data-source';
+import {Pagination} from "../type";
 
 class OrderService {
   private orderRepository: Repository<Order>
@@ -34,15 +35,56 @@ class OrderService {
     return await this.orderRepository.find(options);
   }
 
-  async getOrderPagination(page = 1, limit = 10): Promise<Order[]> {
-    return await this.orderRepository.find({
-      order: {
-        createdAt: 'DESC'
-      },
-      skip: (page - 1) * limit,
+  async getOrderPagination(params: any): Promise<Pagination<Order>> {
+    const {
+      page = 0,
+      limit = 10,
+      phoneNumber,
+      shipCode,
+      shippingUnitId,
+      sortDirection,
+      sortBy,
+    } = params
+    const baseQueryOptions: any = {
+      where: {},
+      skip: page * limit,
       take: limit,
       relations: ['shippingUnit']
-    })
+    }
+    if (shippingUnitId) {
+      baseQueryOptions.where = {
+        ...baseQueryOptions.where,
+        shippingUnitId
+      }
+    }
+    //find by phone number or ship code
+
+    if (phoneNumber) {
+      baseQueryOptions.where = {
+        ...baseQueryOptions.where,
+        phoneNumber: Like(`%${phoneNumber}%`)
+      }
+    }
+    if (shipCode) {
+      baseQueryOptions.where = {
+        ...baseQueryOptions.where,
+        shipCode: Like(`%${shipCode}%`)
+      }
+    }
+    if (sortDirection && sortBy) {
+      baseQueryOptions.order = {
+        [sortBy]: sortDirection
+      }
+    }
+    const list = await this.orderRepository.findAndCount(baseQueryOptions);
+    const totalPage = Math.ceil(list[1] / limit)
+    return {
+      contents: list[0],
+      currentPage: page,
+      perPage: limit,
+      totalPage: totalPage,
+      totalElements: list[1]
+    }
   }
 
   async getOrderByPhoneNumber(phoneNumber: string): Promise<Order[]> {
@@ -128,6 +170,14 @@ class OrderService {
       phoneNumber
     })
   }
+
+  async deleteOrderById(phoneNumber: string, shipCode: string): Promise<void> {
+    await this.orderRepository.delete({
+      phoneNumber,
+      shipCode
+    })
+  }
+
 
 
   async updateData() {
