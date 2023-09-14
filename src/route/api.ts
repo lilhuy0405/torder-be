@@ -15,10 +15,11 @@ router.get(`/users/me`, [authMiddleWare], authController.me.bind(authController)
 
 router.post(`/orders/upload`, [authMiddleWare], orderController.uploadOrders.bind(orderController));
 router.get(`/orders`, [authMiddleWare], orderController.getOrders.bind(orderController));
+router.get(`/orders/count`, [authMiddleWare], orderController.countOrders.bind(orderController));
 router.get(`/orders/:phoneNumber`, orderController.getOrderByPhoneNumber.bind(orderController));
 router.delete(`/orders/:phoneNumber/:shipCode`, [authMiddleWare], orderController.deleteOrder.bind(orderController));
 router.delete(`/by-source`, [authMiddleWare], orderController.deleteBySource.bind(orderController));
-router.get(`/orders/count`, [authMiddleWare], orderController.countOrders.bind(orderController));
+
 
 router.get(`/shipping-units`, [authMiddleWare], shippingUnitController.getAll.bind(shippingUnitController));
 router.post(`/shipping-units`, [authMiddleWare], shippingUnitController.createShippingUnit.bind(shippingUnitController));
