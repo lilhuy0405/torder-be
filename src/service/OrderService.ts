@@ -1,4 +1,4 @@
-import {Like, Repository} from "typeorm";
+import {Like, Repository, IsNull} from "typeorm";
 import {Order} from "../entity";
 import {AppDataSource} from '../data-source';
 import {Pagination} from "../type";
@@ -179,15 +179,25 @@ class OrderService {
   }
 
 
+  async updateOrder(order: Order): Promise<Order> {
+    return await this.orderRepository.save(order)
+  }
 
-  async updateData() {
-    await this.orderRepository.createQueryBuilder('order').update(Order).set({
-      shippingUnitId: 2
-    }).where("createdAt >= '2023-09-13'").execute()
+  async findNotSummaryOrder(): Promise<Order[]> {
+    return await this.orderRepository.find({
+      where: {
+        customerId: IsNull(),
+        productId: IsNull()
+      }
+    })
+  }
 
-    await this.orderRepository.createQueryBuilder('order').update(Order).set({
-      shippingUnitId: 1
-    }).where("createdAt < '2023-09-13'").execute()
+  async findByCustomerId(customerId: number): Promise<Order[]> {
+    return await this.orderRepository.find({
+      where: {
+        customerId
+      }
+    })
   }
 
 }

@@ -1,4 +1,4 @@
-import {OrderService, ShippingUnitService} from "../service";
+import {DataSummaryService, OrderService, ShippingUnitService} from "../service";
 import {Request, Response} from "express";
 import uploadFileMiddleware from "../middleware/upload";
 import Order from "../entity/Order";
@@ -8,16 +8,27 @@ import Excel = require('exceljs');
 class OrderController {
   private readonly orderService: OrderService;
   private readonly shippingUnitService: ShippingUnitService;
+  private readonly summaryService: DataSummaryService
 
   constructor() {
     this.orderService = new OrderService();
     this.shippingUnitService = new ShippingUnitService();
+    this.summaryService = new DataSummaryService();
   }
 
   async uploadOrders(req: AuthenticatedRequest, res: Response) {
     try {
       await uploadFileMiddleware(req, res)
-      const {shipCodeColumn, phoneColumn, productColumn, customerNameColumn, dataStartRow, shippingUnitId} = req.body;
+      const {
+        shipCodeColumn,
+        phoneColumn,
+        productColumn,
+        customerNameColumn,
+        dataStartRow,
+        amountColumn,
+        shipAddressColumn,
+        shippingUnitId
+      } = req.body;
       if (!shipCodeColumn || !phoneColumn || !productColumn || !customerNameColumn || !dataStartRow) {
         return res.status(400).json({
           message: 'Please fill all fields'
@@ -44,12 +55,16 @@ class OrderController {
           const phone = row.getCell(phoneColumn).value;
           const product = row.getCell(productColumn).value;
           const customerName = row.getCell(customerNameColumn).value;
+          const amount = row.getCell(amountColumn).value;
+          const shipAddress = row.getCell(shipAddressColumn).value;
           if (shipCode && phone && product && customerName) {
             listOrder.push({
               shipCode,
               phone,
               product,
-              customerName
+              customerName,
+              amount,
+              shipAddress
             })
           }
         }
@@ -63,6 +78,8 @@ class OrderController {
           newOrder.product = order.product
           newOrder.customerName = order.customerName;
           newOrder.sourceFile = req.file.filename
+          newOrder.amount = order.amount
+          newOrder.shipAddress = order.shipAddress
           if (shippingUnitId) {
             const shippingUnit = await this.shippingUnitService.findById(shippingUnitId);
             if (shippingUnit) {
@@ -77,6 +94,8 @@ class OrderController {
       }))
 
       const succcess = savedOrders.filter(order => order !== null)
+      //summary
+      await this.summaryService.summary();
 
       res.status(200).json({
         message: 'Upload orders success',
@@ -187,6 +206,21 @@ class OrderController {
       console.log("deleteOrder error: ", err);
       return res.status(500).json({
         message: 'Delete order failed ' + err.message
+      })
+    }
+  }
+
+  async summary(req: Request, res: Response) {
+    try {
+      await this.summaryService.summary();
+      return res.status(200).json({
+        message: 'Summary success'
+      });
+    } catch (err: any) {
+      console.log("summary error: ", err);
+      return res.status(500).json({
+        message: 'Summary failed ' + err.message
+
       })
     }
   }

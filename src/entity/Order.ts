@@ -22,6 +22,17 @@ class Order {
   product: string
 
   @Column({
+    type: 'float',
+    nullable: true,
+  })
+  amount: number
+
+  @Column({
+    nullable: true,
+  })
+  shipAddress: string
+
+  @Column({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
   })
@@ -48,6 +59,19 @@ class Order {
     nullable: true,
   })
   shippingUnit: ShippingUnit
+
+  //this will be update when summary order
+  @Column({
+    name: 'customer_id',
+    nullable: true,
+  })
+  customerId: number
+
+  @Column({
+    name: 'product_id',
+    nullable: true,
+  })
+  productId: number
 
 
 }
