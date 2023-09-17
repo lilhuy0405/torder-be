@@ -22,8 +22,8 @@ class CustomerService {
   async findAll(params: any = {}): Promise<Pagination<Customer>> {
     const {page = 0, limit = 10, phone, name} = params;
     const baseQuery = {
-      take: limit,
-      skip: page * limit,
+      take: +limit,
+      skip: +page * +limit,
       where: {},
     }
     if (phone) {
@@ -66,6 +66,10 @@ class CustomerService {
         id
       }
     });
+  }
+
+  async count(): Promise<number> {
+    return await this._customerRepository.count();
   }
 
 }

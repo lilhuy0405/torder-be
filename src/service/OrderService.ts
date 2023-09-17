@@ -47,8 +47,8 @@ class OrderService {
     } = params
     const baseQueryOptions: any = {
       where: {},
-      skip: page * limit,
-      take: limit,
+      skip: +page * +limit,
+      take: +limit,
       relations: ['shippingUnit']
     }
     if (shippingUnitId) {
@@ -206,6 +206,15 @@ class OrderService {
         productId
       }
     })
+  }
+
+  async sumAmount() {
+    const orders = await this.orderRepository.find({})
+    let total = 0
+    orders.forEach(order => {
+      if(order.amount) total += order.amount
+    })
+    return total
   }
 
 }

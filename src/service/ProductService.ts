@@ -21,8 +21,8 @@ class ProductService {
   async findAll(params: any = {}): Promise<Pagination<Product>> {
     const {page = 0, limit = 10, name} = params;
     const baseQuery = {
-      take: limit,
-      skip: page * limit,
+      take: +limit,
+      skip: +page * +limit,
       where: {},
     }
     if (name) {
@@ -55,6 +55,10 @@ class ProductService {
         id
       }
     })
+  }
+
+  async count(): Promise<number> {
+    return await this._productRepository.count();
   }
 
 }

@@ -1,7 +1,7 @@
 import * as express from "express"
 import {
   AuthController,
-  CustomerController,
+  CustomerController, DashBoardController,
   OrderController,
   ProductController,
   ShippingUnitController
@@ -15,6 +15,7 @@ const orderController = new OrderController();
 const shippingUnitController = new ShippingUnitController();
 const customerController = new CustomerController();
 const productController = new ProductController();
+const dashBoardController = new DashBoardController();
 
 
 router.post(`/auth/login`, authController.login.bind(authController));
@@ -41,6 +42,8 @@ router.get(`/customers/:id/orders`, [authMiddleWare], customerController.getOrde
 
 router.get(`/products`, [authMiddleWare], productController.findAll.bind(productController));
 router.put(`/products/:id`, [authMiddleWare], productController.update.bind(productController));
+
+router.get(`/dashboard`, [authMiddleWare], dashBoardController.count.bind(dashBoardController));
 
 
 export default router;
