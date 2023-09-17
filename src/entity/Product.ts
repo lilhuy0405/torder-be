@@ -12,6 +12,7 @@ class Product {
 
   @Column({
     nullable: true,
+    type: 'float',
   })
   price: number;
 

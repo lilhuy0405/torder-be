@@ -200,6 +200,14 @@ class OrderService {
     })
   }
 
+  async findByProductId(productId: number): Promise<Order[]> {
+    return await this.orderRepository.find({
+      where: {
+        productId
+      }
+    })
+  }
+
 }
 
 export default OrderService

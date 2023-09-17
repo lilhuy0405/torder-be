@@ -1,5 +1,11 @@
 import * as express from "express"
-import {AuthController, CustomerController, OrderController, ShippingUnitController} from "../controller";
+import {
+  AuthController,
+  CustomerController,
+  OrderController,
+  ProductController,
+  ShippingUnitController
+} from "../controller";
 import authMiddleWare from "../middleware/auth";
 
 const router = express.Router()
@@ -8,6 +14,7 @@ const authController = new AuthController();
 const orderController = new OrderController();
 const shippingUnitController = new ShippingUnitController();
 const customerController = new CustomerController();
+const productController = new ProductController();
 
 
 router.post(`/auth/login`, authController.login.bind(authController));
@@ -23,7 +30,6 @@ router.delete(`/orders/:phoneNumber/:shipCode`, [authMiddleWare], orderControlle
 router.delete(`orders/by-source`, [authMiddleWare], orderController.deleteBySource.bind(orderController));
 
 
-
 router.get(`/shipping-units`, [authMiddleWare], shippingUnitController.getAll.bind(shippingUnitController));
 router.post(`/shipping-units`, [authMiddleWare], shippingUnitController.createShippingUnit.bind(shippingUnitController));
 router.put(`/shipping-units/:id`, [authMiddleWare], shippingUnitController.updateShippingUnit.bind(shippingUnitController));
@@ -32,5 +38,9 @@ router.put(`/shipping-units/:id`, [authMiddleWare], shippingUnitController.updat
 router.get(`/customers`, [authMiddleWare], customerController.findAll.bind(customerController));
 router.put(`/customers/:id`, [authMiddleWare], customerController.update.bind(customerController));
 router.get(`/customers/:id/orders`, [authMiddleWare], customerController.getOrders.bind(customerController));
+
+router.get(`/products`, [authMiddleWare], productController.findAll.bind(productController));
+router.put(`/products/:id`, [authMiddleWare], productController.update.bind(productController));
+
 
 export default router;

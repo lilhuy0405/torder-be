@@ -48,6 +48,15 @@ class ProductService {
       }
     })
   }
+
+  async findById(id: number): Promise<Product> {
+    return await this._productRepository.findOne({
+      where: {
+        id
+      }
+    })
+  }
+
 }
 
 export default ProductService

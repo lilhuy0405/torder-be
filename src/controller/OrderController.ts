@@ -50,13 +50,21 @@ class OrderController {
       const worksheet = workbook.getWorksheet(1);
       const listOrder = [];
       worksheet.eachRow({includeEmpty: true}, function (row, rowNumber) {
+        console.log('Row ' + rowNumber + ' = ' + JSON.stringify(row.values));
         if (rowNumber >= dataStartRow) {
+
           const shipCode = row.getCell(shipCodeColumn).value;
           const phone = row.getCell(phoneColumn).value;
           const product = row.getCell(productColumn).value;
           const customerName = row.getCell(customerNameColumn).value;
-          const amount = row.getCell(amountColumn).value;
-          const shipAddress = row.getCell(shipAddressColumn).value;
+          let amount = null, shipAddress = null;
+          if(amountColumn) {
+            amount = row.getCell(amountColumn).value;
+          }
+          if(shipAddressColumn) {
+            shipAddress = row.getCell(shipAddressColumn).value;
+          }
+
           if (shipCode && phone && product && customerName) {
             listOrder.push({
               shipCode,
@@ -104,6 +112,7 @@ class OrderController {
 
 
     } catch (err) {
+      console.log("uploadOrders error: ", err)
       res.status(500).json({
         message: 'Upload orders failed ' + err.message
       })
