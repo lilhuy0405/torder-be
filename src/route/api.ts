@@ -34,7 +34,7 @@ router.delete(`orders/by-source`, [authMiddleWare], orderController.deleteBySour
 router.get(`/shipping-units`, [authMiddleWare], shippingUnitController.getAll.bind(shippingUnitController));
 router.post(`/shipping-units`, [authMiddleWare], shippingUnitController.createShippingUnit.bind(shippingUnitController));
 router.put(`/shipping-units/:id`, [authMiddleWare], shippingUnitController.updateShippingUnit.bind(shippingUnitController));
-// router.delete(`/shipping-units/:id`, [authMiddleWare], shippingUnitController.deleteShippingUnit.bind(shippingUnitController));
+router.delete(`/shipping-units/:id`, [authMiddleWare], shippingUnitController.deleteShippingUnit.bind(shippingUnitController));
 
 router.get(`/customers`, [authMiddleWare], customerController.findAll.bind(customerController));
 router.put(`/customers/:id`, [authMiddleWare], customerController.update.bind(customerController));

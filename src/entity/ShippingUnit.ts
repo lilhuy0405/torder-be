@@ -23,6 +23,12 @@ class ShippingUnit {
   })
   appName: string
 
+  @Column({
+    nullable: true,
+    default: 1,
+  })
+  status: number
+
   @OneToMany(type => Order, order => order.shippingUnit)
   orders: Order[];
 

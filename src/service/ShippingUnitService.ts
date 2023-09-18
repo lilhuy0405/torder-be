@@ -20,7 +20,11 @@ class ShippingUnitService {
   }
 
   async getAll(): Promise<ShippingUnit[]> {
-    return await this.shippingUnitRepository.find()
+    return await this.shippingUnitRepository.find({
+      where: {
+        status: 1
+      }
+    })
   }
 
   async updateShippingUnit(shippingUnit: ShippingUnit): Promise<ShippingUnit> {
@@ -33,6 +37,18 @@ class ShippingUnitService {
         id
       }
     })
+  }
+
+  async deleteById(id: number): Promise<ShippingUnit> {
+    //update status -1
+    const shippingUnit = await this.shippingUnitRepository.findOne({
+      where: {
+        id
+      }
+    })
+    if (!shippingUnit) throw new Error('ShippingUnit not found')
+    shippingUnit.status = -1
+    return await this.shippingUnitRepository.save(shippingUnit)
   }
 }
 

@@ -85,6 +85,21 @@ class ShippingUnitController {
     }
   }
 
+  async deleteShippingUnit(req: Request, res: Response) {
+    try {
+      const id = req.params.id;
+      const shippingUnit = await this.shippingUnitService.deleteById(+id);
+      return res.status(200).json({
+        message: 'deleted',
+        data: shippingUnit
+      })
+    } catch (err: any) {
+      console.log("delete shipping unit error", err);
+      return res.status(500).json({
+        message: err.message
+      })
+    }
+  }
 
 
 }
